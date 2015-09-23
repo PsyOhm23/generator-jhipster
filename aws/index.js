@@ -42,6 +42,12 @@ AwsGenerator.prototype.askFor = function askFor() {
 
     var prompts = [
         {
+            type: 'confirm',
+            name: 'runProdBuild',
+            message: 'Should I run a production build before deployment (recommended)?:',
+            default: true
+        },
+        {
             type: 'input',
             name: 'applicationName',
             message: 'Application name:',
@@ -113,6 +119,7 @@ AwsGenerator.prototype.askFor = function askFor() {
         }];
 
     this.prompt(prompts, function (props) {
+        this.runProdBuild = props.runProdBuild;
         this.applicationName = _.slugify(props.applicationName);
         this.environmentName = _.slugify(props.environmentName);
         this.bucketName = _.slugify(props.bucketName);
@@ -134,21 +141,25 @@ AwsGenerator.prototype.trackSubGenerator = function trackSubGenerator() {
 
 AwsGenerator.prototype.productionBuild = function productionBuild() {
     if (this.abort) return;
-    var done = this.async();
-    this.log();
-    this.log(chalk.bold('Building application'));
 
-    build.buildProduction(this.buildTool,
-        function (err) {
-            if (err) {
-                this._errorHandling(err);
-            } else {
-                done();
-            }
-        }.bind(this))
-        .on('data', function (data) {
-            this.log(data.toString());
-        }.bind(this));
+    if (this.runProdBuild) {
+        var done = this.async();
+
+        this.log();
+        this.log(chalk.bold('Building application'));
+
+        build.buildProduction(this.buildTool,
+            function (err) {
+                if (err) {
+                    this._errorHandling(err);
+                } else {
+                    done();
+                }
+            }.bind(this))
+            .on('data', function (data) {
+                this.log(data.toString());
+            }.bind(this));
+    }
 };
 
 AwsGenerator.prototype.createAwsFactory = function createAwsFactory() {
@@ -229,7 +240,7 @@ AwsGenerator.prototype.createDatabaseUrl = function createDatabaseUrl() {
     this.log();
     this.log(chalk.bold('Waiting for database (This may take several minutes)'));
 
-    if(this.dbEngine === 'postgres') {
+    if (this.dbEngine === 'postgres') {
         this.dbEngine = 'postgresql';
     }
 
