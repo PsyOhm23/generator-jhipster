@@ -127,10 +127,13 @@ AwsGenerator.prototype.askFor = function askFor() {
     }.bind(this));
 };
 
-AwsGenerator.prototype.productionBuild = function productionBuild() {
-    if (this.abort) return;
+AwsGenerator.prototype.trackSubGenerator = function trackSubGenerator() {
     var insight = this.insight();
     insight.track('generator', 'aws');
+};
+
+AwsGenerator.prototype.productionBuild = function productionBuild() {
+    if (this.abort) return;
     var done = this.async();
     this.log();
     this.log(chalk.bold('Building application'));
